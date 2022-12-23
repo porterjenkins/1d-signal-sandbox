@@ -42,8 +42,7 @@ class TokenizedTimeSeriesDataset(Dataset):
         x_i = torch.permute(x_i, (1, 0))
 
         x_i = torch.stack(torch.split(x_i, self.token_size, dim=1)).flatten(1)
-        #pos = torch.arange(0, self.max_seq_len, dtype=torch.long)
-        pos = self.get_pos_encoding(self.max_seq_len, self.d_model)
+        pos = torch.arange(0, self.max_seq_len, dtype=torch.long)
 
         return x_i, y_i, pos
 

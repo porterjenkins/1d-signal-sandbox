@@ -118,9 +118,9 @@ class TransformerClassifier(nn.Module):
     def __init__(self, in_dim: int, dim: int, max_seq: int,  transformer: Transformer):
         super(TransformerClassifier, self).__init__()
         self.activation = nn.ReLU()
-        #self.pos_embedding = nn.Embedding(
-        #    num_embeddings=max_seq, embedding_dim=dim
-        #)
+        self.pos_embedding = nn.Embedding(
+            num_embeddings=max_seq, embedding_dim=dim
+        )
         self.linear = nn.Linear(in_dim, dim)
         self.transformer = transformer
         self.output = nn.Linear(dim, 2)
@@ -129,8 +129,8 @@ class TransformerClassifier(nn.Module):
 
     def forward(self, x, p):
         h = self.activation(self.linear(x))
-        #h_pos = self.pos_embedding(p)
-        h = h + p
+        h_pos = self.pos_embedding(p)
+        h = h + h_pos
         h = self.transformer(h)
         y_hat = self.output(h[:, 0, :])
 

@@ -45,7 +45,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8)
 
 
 # Training loop
-n_epochs = 50
+n_epochs = 100
 batch_size = 8
 weight_decay = 0.01
 lr = 3e-4
