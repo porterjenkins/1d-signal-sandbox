@@ -1,13 +1,17 @@
 from tqdm import tqdm
 import numpy as np
 
+from torch.utils.data import DataLoader
+import torch.nn.functional as F
+import torch.nn as nn
+
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 from sim import gen_1d_signal, plot_series
 from utils import get_n_params, RunningAvgQueue
 from datasets import *
-from models.conv import *
+from models.conv import ConvDeconv3xNet
 
 
 # Build dataset
