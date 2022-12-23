@@ -45,7 +45,7 @@ batch_size = 8
 weight_decay = 0.05
 lr = 1e-3
 
-model = ConvDeconvNet(in_channels=2)
+model = ConvDeconv3xNet(in_channels=2)
 
 n_params = get_n_params(model)
 print(f"Number of params: {n_params}")
