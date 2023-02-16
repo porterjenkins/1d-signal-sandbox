@@ -26,16 +26,42 @@ params = {
 }
 
 ```
-This parameters are just hard coded in the two experiment scripts:
+
+### Example:
+For example, the these parameters will yield the following data:
+
+```
+params = {
+    "class_0": {
+        'a': 2.0,
+        'b': 0.5,
+        'c': 1,
+        'd': 0,
+        'eps': 0.5
+    },
+    "class_1": {
+        'a': 1.5,
+        'b': 0.3,
+        'c': -1,
+        'd': 0,
+        'eps': 0.05
+    }
+}
+```
+
+![](example-series.png)
+
+
+## Running Experiment
+The data parameters are just hard coded in the two experiment scripts:
 - `conv_experiment.py`
 - `transformer_experiment.py`
 
-These file will
+These files will
 - Simulate data
 - Plot two time series signals
 - Train a 1D ConvNet or Transformer Encoder-only model
 - Display loss curves
 - Print out test accuracy
 
-## Running Experiment
 To execute the experiments, directly edit the files `conv_experiment.py` and `transformer_experiment.py` with your data parameters. Make sure `torch` is installed (IDK about version lol). Then run `python3 transformer_experiment.py` and `python3 conv_experiment.py`
