@@ -26,15 +26,19 @@ class EncoderBlock(nn.Module):
             embed_dim=dim, num_heads=attn_heads, dropout=dropout_prob, bias=True
         )
 
-        self.norm = nn.LayerNorm(dim)
+        self.layer_norm1 = nn.LayerNorm(dim)
+        self.layer_norm2 = nn.LayerNorm(dim)
         self.dropout = nn.Dropout(dropout_prob)
         self.mlp = TransformerMlp(dim, dropout_prob, fc_dims)
 
     def forward(self, x):
-        h, attn_weights = self.attn(x, x, x)
-        h = self.norm(h + x)
+        h, _ = self.attn(x, x, x)
+        h = self.dropout(h)
+        h = self.layer_norm1(h + x)
+
         h2 = self.mlp(h)
-        h2 = self.norm(h2 + h)
+        h2 = self.dropout(h2)
+        h2 = self.layer_norm2(h2 + h)
 
         return h2
 
