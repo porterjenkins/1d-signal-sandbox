@@ -1,8 +1,8 @@
-import numpy as np
 import torch
 import torch.nn as nn
 
 from collections import OrderedDict
+
 
 class TransformerMlp(nn.Module):
     def __init__(self, dim, dropout_prob, fc_dims):
@@ -12,14 +12,10 @@ class TransformerMlp(nn.Module):
             nn.GELU(),
             nn.Dropout(dropout_prob),
             nn.Linear(fc_dims, dim),
-            nn.GELU(),
-            nn.Dropout(dropout_prob)
         )
 
     def forward(self, x):
-
         return self.net(x)
-
 
 
 class EncoderBlock(nn.Module):
@@ -27,37 +23,34 @@ class EncoderBlock(nn.Module):
         super(EncoderBlock, self).__init__()
 
         self.attn = nn.MultiheadAttention(
-            embed_dim=dim,
-            num_heads=attn_heads,
-            dropout=dropout_prob,
-            bias=True
+            embed_dim=dim, num_heads=attn_heads, dropout=dropout_prob, bias=True
         )
 
-        self.norm = nn.LayerNorm(dim)
+        self.layer_norm1 = nn.LayerNorm(dim)
+        self.layer_norm2 = nn.LayerNorm(dim)
         self.dropout = nn.Dropout(dropout_prob)
         self.mlp = TransformerMlp(dim, dropout_prob, fc_dims)
 
-
     def forward(self, x):
-        h = self.norm(x)
-        h, attn_weights = self.attn(h, h, h)
-        h = h + x
-        h2 = self.norm(h)
-        h2 = self.mlp(h2)
-        h2 = h2 + h
+        h, _ = self.attn(x, x, x)
+        h = self.dropout(h)
+        h = self.layer_norm1(h + x)
+
+        h2 = self.mlp(h)
+        h2 = self.dropout(h2)
+        h2 = self.layer_norm2(h2 + h)
+
         return h2
-
-
 
 
 class Transformer(nn.Module):
     def __init__(
-                    self,
-                    dim: int,
-                    attn_heads: int,
-                    dropout_prob: float,
-                    n_enc_blocks: int,
-                    use_global: bool
+        self,
+        dim: int,
+        attn_heads: int,
+        dropout_prob: float,
+        n_enc_blocks: int,
+        use_global: bool,
     ):
         """
 
@@ -70,13 +63,12 @@ class Transformer(nn.Module):
         """
         super(Transformer, self).__init__()
 
-
         self.encoder = self._build_encoders(n_enc_blocks, dim, dropout_prob, attn_heads)
         self.dropout = nn.Dropout(dropout_prob)
         self.use_global = use_global
         if self.use_global:
-            self.h_global = torch.nn.Parameter(torch.rand(1, dim))
-            self.register_parameter(name='global', param=self.h_global)
+            self.h_global = nn.Parameter(torch.rand(1, dim))
+            self.register_parameter(name="global", param=self.h_global)
 
     def _build_encoders(self, n_enc_blocks, dim, dropout_prob, attn_heads):
         """
@@ -91,9 +83,7 @@ class Transformer(nn.Module):
             enc_blocks.append(
                 (f"encoder_{i}", EncoderBlock(dim, dropout_prob, attn_heads, dim))
             )
-        encoder = nn.Sequential(OrderedDict(
-            enc_blocks
-        ))
+        encoder = nn.Sequential(OrderedDict(enc_blocks))
         return encoder
 
     def forward(self, x):
@@ -107,25 +97,21 @@ class Transformer(nn.Module):
             x = torch.cat([h_global, x], dim=1)
         x = x.transpose(0, 1)
         # needs (sequence length, batch size, embedding dimension)
-        #print("before update: ", x[0, 0, :])
+        # print("before update: ", x[0, 0, :])
         h = self.encoder(x)
-        #print("after update", h[0, 0, :])
+        # print("after update", h[0, 0, :])
         return h.transpose(0, 1)
 
 
 class TransformerClassifier(nn.Module):
-
-    def __init__(self, in_dim: int, dim: int, max_seq: int,  transformer: Transformer):
+    def __init__(self, in_dim: int, dim: int, max_seq: int, transformer: Transformer):
         super(TransformerClassifier, self).__init__()
         self.activation = nn.ReLU()
-        self.pos_embedding = nn.Embedding(
-            num_embeddings=max_seq, embedding_dim=dim
-        )
+        self.pos_embedding = nn.Embedding(num_embeddings=max_seq, embedding_dim=dim)
         self.linear = nn.Linear(in_dim, dim)
         self.transformer = transformer
         self.output = nn.Linear(dim, 2)
         self.softmax = nn.Softmax(dim=-1)
-
 
     def forward(self, x, p):
         h = self.activation(self.linear(x))
@@ -141,15 +127,18 @@ class TransformerClassifier(nn.Module):
 
     @classmethod
     def build(cls, in_dim, h_dim, attn_heads, encoder_blocks, max_seq_len):
-        t = Transformer(
+        transformer = Transformer(
             dim=h_dim,
             attn_heads=attn_heads,
             n_enc_blocks=encoder_blocks,
             dropout_prob=0.0,
-            use_global=True
+            use_global=True,
         )
-        model = TransformerClassifier(in_dim, dim=h_dim, transformer=t, max_seq=max_seq_len)
+        model = TransformerClassifier(
+            in_dim, dim=h_dim, transformer=transformer, max_seq=max_seq_len
+        )
         return model
+
 
 if __name__ == "__main__":
     # needs (batch size, sequence length, channels)
@@ -157,11 +146,7 @@ if __name__ == "__main__":
     p = torch.arange(0, 5, dtype=torch.long)
     d = 128
     t = Transformer(
-        dim=d,
-        attn_heads=8,
-        n_enc_blocks=1,
-        dropout_prob=0.0,
-        use_global=True
+        dim=d, attn_heads=8, n_enc_blocks=1, dropout_prob=0.0, use_global=True
     )
     model = TransformerClassifier(40, dim=d, transformer=t, max_seq=5)
     y = model(x, p)

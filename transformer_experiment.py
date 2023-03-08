@@ -18,19 +18,19 @@ from models.transformer import TransformerClassifier
 # Build dataset
 params = {
     "class_0": {
-        'a': 2.0,
-        'b': 0.5,
-        'c': 1,
-        'd': 0,
-        'eps': 0.5
+        "a": 2.0,
+        "b": 0.5,
+        "c": 1,
+        "d": 0,
+        "eps": 0.5,
     },
     "class_1": {
-        'a': 1.8,
-        'b': 0.5,
-        'c': 1.0,
-        'd': 0,
-        'eps': 0.5
-    }
+        "a": 1.8,
+        "b": 0.5,
+        "c": 1.0,
+        "d": 0,
+        "eps": 0.5,
+    },
 }
 n = 1000
 l = 100
@@ -50,15 +50,11 @@ batch_size = 8
 weight_decay = 0.01
 lr = 3e-4
 
-k = 20 # chunk/kernel size
-d = 128 # hidden dim
+k = 20  # chunk/kernel size
+d = 128  # hidden dim
 
 model = TransformerClassifier.build(
-    in_dim=k*2,
-    h_dim=d,
-    attn_heads=8,
-    encoder_blocks=1,
-    max_seq_len= l // k
+    in_dim=k * 2, h_dim=d, attn_heads=8, encoder_blocks=1, max_seq_len=l // k
 )
 
 n_params = get_n_params(model)
@@ -95,7 +91,9 @@ for e in tqdm(range(n_epochs)):
         loss_queue.add(float(loss.detach().data.numpy()))
         loss_arr.append(loss_queue.mean())
 
-        acc = np.mean((torch.argmax(F.softmax(y_hat, dim=-1), dim=-1) == target).data.numpy())
+        acc = np.mean(
+            (torch.argmax(F.softmax(y_hat, dim=-1), dim=-1) == target).data.numpy()
+        )
         acc_queue.add(acc)
 
         acc_arr.append(acc_queue.mean())
@@ -112,7 +110,11 @@ for e in tqdm(range(n_epochs)):
     test_y_hat_all = torch.cat(test_y_hat_list)
     test_target_all = torch.cat(test_target_list)
 
-    test_acc = np.mean((torch.argmax(F.softmax(test_y_hat_all, dim=-1), dim=-1) == test_target_all).data.numpy())
+    test_acc = np.mean(
+        (
+            torch.argmax(F.softmax(test_y_hat_all, dim=-1), dim=-1) == test_target_all
+        ).data.numpy()
+    )
     test_acc_arr.append(test_acc)
 
 plt.plot(np.arange(len(loss_arr)), loss_arr)
@@ -125,14 +127,14 @@ plt.plot(np.arange(len(acc_arr)), acc_arr)
 plt.xlabel("iteration")
 plt.ylabel("Accuracy")
 plt.title("Train Accuracy")
-plt.axhline(acc_arr[-1], c='red', linestyle='--')
+plt.axhline(acc_arr[-1], c="red", linestyle="--")
 plt.show()
 
 
 plt.plot(np.arange(len(test_acc_arr)), test_acc_arr)
 plt.xlabel("Epoch")
 plt.ylabel("Accuracy")
-plt.axhline(np.mean(test_acc_arr[-5:]), c='red', linestyle='--')
+plt.axhline(np.mean(test_acc_arr[-5:]), c="red", linestyle="--")
 plt.title("Test Accuracy")
 plt.show()
 
